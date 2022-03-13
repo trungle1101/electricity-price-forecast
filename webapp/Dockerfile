@@ -1,14 +1,12 @@
 FROM python:3.8-slim
 
-ADD /webapp/requirements.txt /proj/webapp/
+ADD /webapp/requirements.txt /webapp/
 
-WORKDIR /proj
+WORKDIR /webapp
 
-COPY requirements.txt /
+RUN pip install -r /webapp/requirements.txt
 
-RUN pip install -r /proj/webapp/requirements.txt
-
-ADD ./webapp /proj/webapp
+ADD ./webapp /webapp
 
 ENV ENVIRONMENT_FILE=".env"
 
