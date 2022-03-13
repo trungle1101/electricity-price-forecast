@@ -1,13 +1,38 @@
 version: "3.7"
 
 services:
-  clean-dash:
+  webapp:
     build:
       context: .
     image: clean-dash:$VERSION
-    container_name: clean-dash
+    container_name: webapp-container
     ports:
       - "8084:8085"
     environment:
       - TARGET=$TARGET
     restart: unless-stopped
+  
+  api_app:
+    image: mcapo1/proj_api:dev
+    restart: always
+    build:
+      context: .
+      dockerfile: ./apiapp/Dockerfile
+    expose:
+      - 8050
+    volumes:
+      - ./apiapp:/proj/apiapp
+    env_file:
+      - .env
+
+  database_pg13:
+    container_name: pg13
+    image: "postgres:13" # use latest official postgres version
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - ./data/postgres/db-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+    ports:
+      - 5432:5432
