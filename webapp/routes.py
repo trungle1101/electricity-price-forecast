@@ -14,10 +14,10 @@ from pages.iris import iris
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render_page_content(pathname):
-    if pathname == home_page_location:
-        return home.layout
-    elif pathname == gdp_page_location:
+    if pathname == gdp_page_location:
         return gdp.layout
+    elif pathname == home_page_location :
+        return dbc.NavLink(href="https://iotmind.vn/", active="exact")
     elif pathname == iris_page_location:
         return iris.layout
     # If the user tries to reach a different page, return a 404 message
