@@ -109,7 +109,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+webapp_venv/
 
+
+# Caches
+webapp/cache_directory
 # Spyder project settings
 .spyderproject
 .spyproject

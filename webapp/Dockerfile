@@ -5,6 +5,7 @@ ADD /webapp/requirements.txt /webapp/
 WORKDIR /webapp
 
 RUN pip install -r /webapp/requirements.txt
+RUN pip install tensorflow
 
 ADD ./webapp /webapp
 
