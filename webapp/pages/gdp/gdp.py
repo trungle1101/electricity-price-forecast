@@ -5,7 +5,7 @@ from pages.gdp.gdp_data import dataframe
 
 
 layout = html.Div([
-    html.H1("24h Electricity forecast"),
+    html.H1("24h Electricity Forecast"),
     html.Hr(),
     dcc.Graph(id='graph-with-slider'),
     dcc.Slider(

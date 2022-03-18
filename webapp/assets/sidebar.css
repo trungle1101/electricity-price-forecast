@@ -1,12 +1,13 @@
 #sidebar {
   text-align: center;
   padding: 2rem 1rem;
-  background-color: #f8f9fa;
+  background-color: #2c2e3a;
 }
 
 #sidebar h2 {
   text-align: left;
   margin-bottom: 0;
+  color: #f8f9fa;
 }
 
 /* Hide the blurb on a small screen */

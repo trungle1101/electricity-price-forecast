@@ -8,7 +8,7 @@ from utils.constants import home_page_location, gdp_page_location, iris_page_loc
 # it consists of a title, and a toggle, the latter is hidden on large screens
 sidebar_header = dbc.Row(
     [
-        dbc.Col(html.H2("Mind", className="display-4")),
+        dbc.Col(html.H2("MIND", className="display-4")),
         dbc.Col(
             [
                 html.Button(
@@ -52,8 +52,7 @@ sidebar = html.Div(
             [
                 html.Hr(),
                 html.P(
-                    "A responsive sidebar layout with collapsible navigation "
-                    "links.",
+                    "info@iotmind.vn",
                     className="lead",
                 ),
             ],
@@ -63,9 +62,9 @@ sidebar = html.Div(
         dbc.Collapse(
             dbc.Nav(
                 [
-                    dbc.NavLink("Home", href=home_page_location, active="exact"),
-                    dbc.NavLink("GDP", href=gdp_page_location, active="exact"),
-                    dbc.NavLink("Iris", href=iris_page_location, active="exact"),
+                    dbc.NavLink("Electricity Forecast", href=gdp_page_location, active="exact"),
+                    dbc.NavLink("Data Visualization", href=iris_page_location, active="exact"),
+                    dbc.NavLink("About MIND", href="https://iotmind.vn/", active="exact"),
                 ],
                 vertical=True,
                 pills=True,
