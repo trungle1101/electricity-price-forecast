@@ -15,7 +15,35 @@ services:
       - TARGET=$TARGET
     restart: unless-stopped
   
+  nginx:
+    container_name: nginx
+    image: nginx:1.19.2-alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx/data/prod/app.conf.template:/etc/nginx/conf.d/app.conf.template
+      - ./nginx/htpasswd/pwdfile:/etc/nginx/pwdfile
+      - ./homepages:/homepages
+    #  - ./nginx-certbot-dev/data/certbot/conf:/etc/letsencrypt
+    #  - ./nginx-certbot-dev/data/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    command: /bin/sh -c "envsubst '$${DOMAIN_NAME}' < /etc/nginx/conf.d/app.conf.template > /etc/nginx/conf.d/app.conf && while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g 'daemon off;'"
 
+  jupyter:
+    image: mind/jlab
+    build:
+      context: .
+      dockerfile: ./jlab/jlab.Dockerfile
+    container_name: jupyter_lab
+    command: start.sh jupyter lab --no-browser --LabApp.password='sha1:66ae553d5704:5c6b61583cf02c68520fc730386cf4c383589d0e'  --LabApp.allow_remote_access='True' --LabApp.allow_origin='*' --LabApp.base_url='/jlab'
+    restart: always
+    volumes:
+      - ./jlab/works:/home/jovyan/work/
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      GRANT_SUDO: "yes"
   database_pg13:
     container_name: pg13
     image: "postgres:13" # use latest official postgres version
@@ -27,3 +55,88 @@ services:
       - ./data/postgres/db-data:/var/lib/postgresql/data/ # persist data even if container shuts down
     ports:
       - 5432:5432
+
+  # api_app:
+  #   image: mind/proj_api:dev
+  #   restart: always
+  #   build:
+  #     context: .
+  #     dockerfile: ./apiapp/Dockerfile
+  #   expose:
+  #     - 8050
+  #   volumes:
+  #     - ./apiapp:/proj/apiapp
+  #     - ./utils:/proj/utils
+  #     - ./model:/proj/model
+  #     - ./config:/proj/config
+  #     - ./tcg_dash_components:/proj/tcg_dash_components
+  #   env_file:
+  #     - .env
+  redis:
+    container_name: redis
+    # image: redis:alpine
+    image: bitnami/redis:latest
+    restart: always
+    command: redis-server /etc/redis/redis.conf
+    expose:
+      - 6379
+    user: root
+    volumes:
+      - ./data/redis:/data
+      - ./redis.conf:/etc/redis/redis.conf
+  airflow_pg13:
+      container_name: airflow_pg13
+      image: "postgres:13"
+      environment:
+          - POSTGRES_USER=airflow
+          - POSTGRES_PASSWORD=airflow
+          - POSTGRES_DB=airflow
+      volumes:
+        - ./data/airflow/postgres:/var/lib/postgresql/data/ # persist data even if container shuts down
+      ports:
+        - 5433:5432
+  scheduler:
+      container_name: airflow_scheduler
+      image: imnd/airflow_scheduler:dev
+      build:
+        context: .
+        dockerfile: ./airflow/Dockerfile
+      command: bash scripts/entrypoint_schedule.sh
+      # command: scheduler
+      deploy:
+          restart_policy:
+              condition: on-failure
+      depends_on:
+          - airflow_pg13
+      env_file:
+          - airflow-celery.env
+          - .env
+      volumes:
+        - ./airflow/dags:/opt/airflow/dags
+        - ./airflow/scripts:/opt/airflow/scripts
+        - ./model:/opt/airflow/model
+
+  webserver:
+      container_name: airflow_webserver
+      image: mind/airflow_webserver:dev
+      build:
+        context: .
+        dockerfile: ./airflow/Dockerfile
+      command: bash scripts/entrypoint.sh
+      # command: webserver
+      deploy:
+          restart_policy:
+              condition: on-failure
+      depends_on:
+          - airflow_pg13
+          - scheduler
+          - redis
+      env_file:
+          - airflow-celery.env
+          - .env
+      volumes:
+        - ./airflow/dags:/opt/airflow/dags
+        - ./airflow/scripts:/opt/airflow/scripts
+        - ./model:/opt/airflow/model
+      expose:
+        - 8080

@@ -1,0 +1,189 @@
+server {
+    listen 80;
+    server_name ${DOMAIN_NAME};
+    server_tokens off;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        proxy_pass  http://webapp:8085;
+        proxy_set_header    Host                $http_host;
+        proxy_set_header    X-Real-IP           $remote_addr;
+        proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+        proxy_set_header    X-Forwarded-Proto $scheme;
+    }
+
+    location = /jlab {
+        rewrite      ^/(.*)$ $1/ permanent;
+     }
+
+    location /jlab {
+      # auth_basic           "Administrator’s Area";
+      # auth_basic_user_file /etc/nginx/pwdfile;
+       error_page 403 = @proxy_groot;
+       deny 127.0.0.1;
+       allow all;
+       # set a webroot, if there is one
+       #root /some-webroot;
+       try_files $uri @proxy_groot;
+     }
+
+    location @proxy_groot {
+        #rewrite /groot(.*) $1  break;
+        proxy_read_timeout 300s;
+        proxy_pass http://jupyter:8888;
+        # pass some extra stuff to the backend
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-Ip $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      }
+    location ~ /jlab/api/kernels/ {
+              proxy_pass            http://jupyter:8888;
+              proxy_set_header      Host $host;
+              # websocket support
+              proxy_http_version    1.1;
+              proxy_set_header      Upgrade "websocket";
+              proxy_set_header      Connection "Upgrade";
+              proxy_read_timeout    86400;
+          }
+
+    location ~ /jlab/terminals/ {
+              proxy_pass            http://jupyter:8888;
+              proxy_set_header      Host $host;
+              # websocket support
+              proxy_http_version    1.1;
+              proxy_set_header      Upgrade "websocket";
+              proxy_set_header      Connection "Upgrade";
+              proxy_read_timeout    86400;
+      }
+    
+    location /airflow/ {
+        auth_basic off;
+        #proxy_pass_header Authorization;
+        proxy_pass http://webserver:8080;
+        proxy_set_header Host $host;
+        proxy_redirect off;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+
+client_max_body_size 100M;
+
+# server {
+#     listen 443 ssl;
+#     server_name ${DOMAIN_NAME} ;
+
+#     auth_basic           "Administrator’s Area";
+#     auth_basic_user_file /etc/nginx/pwdfile;
+#     server_tokens off;
+
+#     ssl_certificate /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;
+#     include /etc/letsencrypt/options-ssl-nginx.conf;
+#     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+#          #ssl_prefer_server_ciphers on;
+#         ssl_session_cache shared:SSL:10m;
+#         add_header Strict-Transport-Security "max-age=63072000; includeSubDomains";
+#         add_header X-Content-Type-Options nosniff;
+#         #ssl_stapling on; # Requires nginx >= 1.3.7
+#         #ssl_stapling_verify on; # Requires nginx => 1.3.7
+#         #resolver_timeout 5s;
+
+#         access_log /var/log/nginx/access.log;
+#         error_log /var/log/nginx/error.log;
+
+#     rewrite ^/web?$ /web/app/ permanent;
+#     rewrite ^/web/?$ /web/app/ permanent;
+#     # rewrite ^/?$ /web/app/ permanent;
+
+#     location / {
+#         root   /homepages;
+#         index  index.html index.htm;
+#     }
+
+#     location /web/app {
+#         proxy_pass  http://webapp_servers;
+#         proxy_set_header    Host                $http_host;
+#         proxy_set_header    X-Real-IP           $remote_addr;
+#         proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+#         proxy_set_header    X-Forwarded-Proto $scheme;
+#     }
+
+#     location /api {
+#         auth_basic off;
+#         proxy_pass  http://api_app:8050;
+#         proxy_set_header    Host                $http_host;
+#         proxy_set_header    X-Real-IP           $remote_addr;
+#         proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+#         proxy_set_header    X-Forwarded-Proto $scheme;
+#     }
+
+#     location /swaggerui {
+#         proxy_pass  http://api_app:8050;
+#         proxy_set_header    Host                $http_host;
+#         proxy_set_header    X-Real-IP           $remote_addr;
+#         proxy_set_header    X-Forwarded-For     $proxy_add_x_forwarded_for;
+#         proxy_set_header    X-Forwarded-Proto $scheme;
+#     }
+#     location /airflow/ {
+#         auth_basic off;
+#         #proxy_pass_header Authorization;
+#         proxy_pass http://webserver:8080;
+#         proxy_set_header Host $host;
+#         proxy_redirect off;
+#         proxy_http_version 1.1;
+#         proxy_set_header Upgrade $http_upgrade;
+#         proxy_set_header Connection "upgrade";
+
+#     location = /jlab {
+#         rewrite      ^/(.*)$ $1/ permanent;
+#      }
+
+#     location /jlab {
+#       # auth_basic           "Administrator’s Area";
+#       # auth_basic_user_file /etc/nginx/pwdfile;
+#        error_page 403 = @proxy_groot;
+#        deny 127.0.0.1;
+#        allow all;
+#        # set a webroot, if there is one
+#        #root /some-webroot;
+#        try_files $uri @proxy_groot;
+#      }
+
+#     location @proxy_groot {
+#         #rewrite /groot(.*) $1  break;
+#         proxy_read_timeout 300s;
+#         proxy_pass http://jupyter:8888;
+#         # pass some extra stuff to the backend
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-Ip $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#       }
+#     location ~ /jlab/api/kernels/ {
+#               proxy_pass            http://jupyter:8888;
+#               proxy_set_header      Host $host;
+#               # websocket support
+#               proxy_http_version    1.1;
+#               proxy_set_header      Upgrade "websocket";
+#               proxy_set_header      Connection "Upgrade";
+#               proxy_read_timeout    86400;
+#           }
+
+#     location ~ /jlab/terminals/ {
+#               proxy_pass            http://jupyter:8888;
+#               proxy_set_header      Host $host;
+#               # websocket support
+#               proxy_http_version    1.1;
+#               proxy_set_header      Upgrade "websocket";
+#               proxy_set_header      Connection "Upgrade";
+#               proxy_read_timeout    86400;
+#       }
+
+# }
+

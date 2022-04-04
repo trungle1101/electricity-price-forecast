@@ -1,0 +1,13 @@
+flask
+Flask-SQLAlchemy
+SQLAlchemy
+flask_security
+ib_insync
+pyfolio-reloaded
+psycopg2-binary
+# zipline-reloaded
+pandas==1.2.4
+backtrader
+empyrical
+plotly
+dtale

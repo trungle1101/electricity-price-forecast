@@ -25,11 +25,14 @@ app = dash.Dash(
     ]
 )
 
+app.title = "Mind - Electricity forecatsing"
+
 cache = Cache(app.server, config={
     'CACHE_TYPE': 'filesystem',
     'CACHE_DIR': 'cache-directory'
 })
 
 app.layout = layout
+app._favicon = ("logo_mind.png")
 
 server = app.server

@@ -1,7 +1,7 @@
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 
-from utils.constants import home_page_location, gdp_page_location, iris_page_location
+from utils.constants import home_page_location, forecast_page_location, iris_page_location
 
 
 # we use the Row and Col components to construct the sidebar header
@@ -62,7 +62,7 @@ sidebar = html.Div(
         dbc.Collapse(
             dbc.Nav(
                 [
-                    dbc.NavLink("Electricity Forecast", href=gdp_page_location, active="exact"),
+                    dbc.NavLink("Electricity Forecast", href=forecast_page_location, active="exact"),
                     dbc.NavLink("Data Visualization", href=iris_page_location, active="exact"),
                     dbc.NavLink("About MIND", href="https://iotmind.vn/", active="exact"),
                 ],
